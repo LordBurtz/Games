@@ -130,7 +130,6 @@ def main():
     global menu_style
     menu_style = ('bg_red', 'fg_yellow')
     global player
-    player = ''
     login()
     global weapon
     weapon = 1
@@ -138,7 +137,7 @@ def main():
     health = 25
 
     try:
-        with open(str(player + '.inventory')) as inv:
+        with open(str(player + '.inventory'), 'r') as inv:
             data = []
             data = inv.read()
     except:
@@ -147,6 +146,8 @@ def main():
             print('First time? *zwinkersmiley*')
             time.sleep(2)
 
+    global inventory
+    inventory = str(player + '.inventory')
     mainMenu()
 
 def Monster():
@@ -237,7 +238,7 @@ def Treasure():
             chance = random.randint(1, 100)
             if chance <= 50 and chance > 15:
                 print(' You found a Normal Sword')
-                with open('inventory', 'a') as inv:
+                with open(inventory, 'a') as inv:
                     inv.write('1')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -245,7 +246,7 @@ def Treasure():
                 newRoom()
             elif chance > 50 and chance < 76:
                 print(' You found a Hardened Iron Sword')
-                with open('inventory', 'a') as inv:
+                with open(inventory, 'a') as inv:
                     inv.write('2')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -253,7 +254,7 @@ def Treasure():
                 newRoom()
             elif chance >= 76 and chance <= 88:
                 print(' You found Ringil\n Congrats!')
-                with open('inventory', 'a') as inv:
+                with open(inventory, 'a') as inv:
                     inv.write('3')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -261,7 +262,7 @@ def Treasure():
                 newRoom()
             elif chance > 88 and chance < 94:
                 print(' You found Excalibur!\n Congrats!')
-                with open('inventory', 'a') as inv:
+                with open(inventory, 'a') as inv:
                     inv.write('4')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -303,7 +304,7 @@ def Inventar():
         main_sel = menu.show()
 
         if main_sel == 0:
-            with open('inventory') as inv:
+            with open(inventory) as inv:
                 inven = []
                 inven = inv.read()
             items = set()
@@ -371,7 +372,7 @@ def chooseWeapon():
         noot = 'you dont have this weapon'
         menu_sel = menu.show()
         if menu_sel == 0:
-            with open('inventory') as inv:
+            with open(inventory) as inv:
                 inven = inv.read()
             if '1' in inven:
                 print('success')
@@ -383,7 +384,7 @@ def chooseWeapon():
                 time.sleep(1)
 
         elif menu_sel == 1:
-            with open('inventory') as inv:
+            with open(inventory) as inv:
                 inven = inv.read()
             if '2' in inven:
                 weapon= 2
@@ -395,7 +396,7 @@ def chooseWeapon():
 
 
         elif menu_sel == 2:
-            with open('inventory') as inv:
+            with open(inventory) as inv:
                 inven = inv.read()
             if '3' in inven:
                 weapon = 3
@@ -406,7 +407,7 @@ def chooseWeapon():
                 time.sleep(1)
 
         elif menu_sel == 3:
-            with open('inventory') as inv:
+            with open(inventory) as inv:
                 inven = inv.read()
             if '4' in inven:
                 weapon = 4
@@ -436,13 +437,13 @@ def Teleport():
 
 def login():
     global player
-    try:
+    if os.path.isfile('players'):
 
         with open('players', 'r') as pl:
             players = []
             players = pl.readlines()
-
-        print(players)
+        print(' Type "new" for a new player')
+        print(' Idiots: --> ' + str(players))
         username = input(' Username: ')
 
         if str(username) == 'new':
@@ -482,8 +483,10 @@ def login():
 
             with open('players', 'a') as p:
                 p. writelines('\n' + new_username)
+                player = new_username
 
-    except:
+    else:
+        print(' File "players" not found')
         print(' Creating one..')
         new_username = input(' Username: ')
         new_password = getpass(' Password: ')
@@ -494,6 +497,7 @@ def login():
 
         with open('players', 'a') as p:
             p. writelines('\n' + new_username)
+            player = new_username
 
 if __name__ == '__main__':
     main()
