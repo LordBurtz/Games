@@ -1,3 +1,7 @@
+#created by Fingolfin#5731
+#feel free to leave feedback or open a pull request if you have a good fix for getpass()... 
+#it only accepts ASCII
+
 import time, random, fileinput, sys, hashlib, os, shutil
 from simple_term_menu import TerminalMenu
 from getpass import getpass
