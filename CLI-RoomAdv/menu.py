@@ -1,10 +1,10 @@
-import time, random, fileinput, sys, hashlib, os
+import time, random, fileinput, sys, hashlib, os, shutil
 from simple_term_menu import TerminalMenu
 from getpass import getpass
 
 def mainMenu():
     main_menu_title = ' Main Menu\n'
-    main_menu_items = ['New room', 'Inventar', 'Teleport', 'Customize NOT WORKING PROPERLY !', 'Quit']
+    main_menu_items = ['New room', 'Inventar', 'Teleport', 'Customize NOT WORKING PROPERLY !', 'Quit', ' ', 'Admin']
 
     main_menu = TerminalMenu (
         title = main_menu_title,
@@ -17,6 +17,8 @@ def mainMenu():
     )
 
     main_menu_exit = False
+
+    #with open(str(player + '.purse'))
 
     while not main_menu_exit:
         main_sel = main_menu.show()
@@ -32,6 +34,119 @@ def mainMenu():
             main_menu_exit = True
         elif main_sel == 4:
             print('Quitting..')
+            sys.exit()
+        elif main_sel == 6:
+            admin()
+
+def admin():
+    print(' Admin panel: ')
+    adminLog = getpass(' Input admin password: ')
+
+    i = 1
+    while i < 4:
+        if str(adminLog) == str('admin'):
+            kurt()
+            break
+        elif i >= 3:
+            print(' too many wrong passwords entered.. ')
+            break
+        else:
+            print('\n failed\n wrong password entered\n')
+            print(' ' + str(3 - i) + ' tries left')
+            i += 1
+
+def kurt():
+    global menu_cursor
+    global menu_cursor_style
+    global menu_style
+
+    menu_title = ' Holy Admin panel'
+    menu_items = [' delete user', 'change user password', 'reset user', 'self destruct', 'back']
+    menu_back = False
+
+    menu = TerminalMenu(
+        title = menu_title,
+        menu_entries = menu_items,
+        menu_cursor = menu_cursor,
+        menu_cursor_style = menu_cursor_style,
+        menu_highlight_style = menu_style,
+        cycle_cursor = True,
+        clear_screen = True
+    )
+
+    while not menu_back:
+        menu_sel = menu.show()
+        if menu_sel == 0:
+            print(' Whom to delete?')
+            deleted_user = input(' Username: ')
+            check = input(' Sure? Y/n ')
+            print(' deleting ' + deleted_user)
+            if check == 'Y':
+                try: shutil.rmtree(str('RoomAdvGame/' + deleted_user))
+                except: print('fuf')
+
+                with open('RoomAdvGame/players', 'r') as rpl:
+                    content = []
+                    content = rpl.readlines()
+                if deleted_user in content:
+                    content.remove(deleted_user)
+                    with open('RoomAdvGame/players', 'w') as rpl:
+                        i = 0
+                        for item in content:
+                            rpl.write(content[i])
+                            i += 1
+                else:
+                    print(' user does not exist')
+
+        elif menu_sel == 1:
+            print(' Whose password to change?')
+            change_user = input(' User: ')
+            with open('RoomAdvGame/players', 'r') as rpl:
+                content = []
+                content = rpl.readlines()
+            if change_user in content:
+                new_password = getpass(' New password: ')
+                with open('RoomAdvGame/' + change_user + '/' + change_user + '.password', 'wb') as pwd:
+                    pwd.write(hashPasswd(new_password))
+                    print(' password updated')
+                    time.sleep(1)
+            else:
+                print(' this user does not exist')
+                time.sleep(2)
+
+        elif menu_sel == 2:
+            print(' Who to reset?')
+            reset_user = input(' user: ')
+            with open('RoomAdvGame/players', 'r') as rpl:
+                content = []
+                content = rpl.readlines()
+            if reset_user in content:
+                print(' Sure to reset ' + reset_user + '?')
+                choice = input(' Sure? Y/n ')
+                if choice == Y:
+                    with open('RoomAdvGame/' + reset_user + '/' + reset_user + '.inventory', 'w') as i:
+                        i.write('1')
+                    with open('RoomAdvGame/' + reset_user + '/' + reset_user + '.purse', 'w') as i:
+                        i.write('50')
+                    print(' successfull resetted')
+                    time.sleep(1)
+                else:
+                    print(' ok have a great day')
+
+        elif menu_sel == 3:
+            print(' Do you really want to self destruct?')
+            choice = input(' Y/n --> ')
+            if choice == 'Y':
+                shutil.rmtree('RoomAdvGame')
+                os.remove(sys.argv[0])
+                print(' bravo six going dark')
+                print(' cya')
+                time.sleep(2.5)
+                sys.exit()
+            else:
+                print(' Buhr?')
+                time.sleep(1)
+        elif menu_sel == 4:
             sys.exit()
 
 def Customize():
@@ -123,6 +238,10 @@ def hashPasswd(input, salt=os.urandom(32)):
     return store
 
 def main():
+    os.system('clear')
+    print('\n RoomAdvGame presented by Fingolfin')
+    time.sleep(2)
+    os.system('clear')
     global menu_cursor
     menu_cursor = '-> '
     global menu_cursor_style
@@ -130,27 +249,51 @@ def main():
     global menu_style
     menu_style = ('bg_red', 'fg_yellow')
     global player
-    login()
+    global motype
     global weapon
     weapon = 1
     global health
-    health = 25
+    health = 42 + 17
 
+    login()
+    test()
+    mainMenu()
+
+def test():
+    global player
     try:
-        with open(str(player + '.inventory'), 'r') as inv:
+        with open(str('RoomAdvGame/' + player + '/' + player + '.inventory'), 'r') as inv:
             data = []
             data = inv.read()
     except:
-        with open(str(player + '.inventory'), 'a') as inv:
+        with open(str('RoomAdvGame/' +  player + '/' + player + '.inventory'), 'a') as inv:
             inv.write('1')
             print('First time? *zwinkersmiley*')
             time.sleep(2)
 
     global inventory
     inventory = str(player + '.inventory')
-    mainMenu()
+    global coins
+
+    try:
+        with open(str('RoomAdvGame/' + player + '/' + player + '.purse'), 'r') as pu:
+            coins = pu.read()
+    except:
+        with open(str('RoomAdvGame/' + player + '/' + player + '.purse'), 'w') as pu:
+            pu.write(str(50))
+
+def add2purse():
+    global player
+    global coins
+    with open(str('RoomAdvGame/' + player + '.purse'), 'w') as pu:
+        swap = int(pu.read())
+        swap = int(swap) + int(coins)
+        pu.write(int(swap))
+        coins = 0
 
 def Monster():
+    global motype
+
     hp = random.randint(30, 69)
 
     menu_title = ' Fight for your life\n'
@@ -167,12 +310,22 @@ def Monster():
         clear_screen = True
     )
 
+    if hp < 40:
+        motype = 1
+    elif hp >= 40 and hp < 50:
+        motype = 2
+    elif hp >= 50 and hp < 60:
+        motype = 3
+    elif hp >= 60 and hp < 70:
+        motype = 4
+
     monster_dead = False
     debug = True
 
     while not menu_back:
         global weapon
         global health
+        global coins
 
         """round based health reduction WIP"""
 
@@ -188,25 +341,41 @@ def Monster():
         menu_sel = menu.show()
         if menu_sel == 0:
             if hp > 0:
-                print(' monsterhp: ' + str(hp)   )
                 print(' you attacked using ' + sword )
                 ap = attack()
                 hp = int(hp) - int(ap)
+                moap = monsterattack()
+                health = health - moap
+
                 print(' you attacked dealing ' + str(ap) + ' damage!')
-                if hp < 0:
+                print(' The monster has ' + str(hp) + ' hp left')
+                print(' The monster attacked dealing ' + str(moap) + ' hp damage')
+                print(' you have ' + str(health) + ' hp left')
+
+                if hp <= 0:
                     print(' monster killed')
+                    reward = reward()
+                    print(' you got ' + str(reward) + ' coins')
                     menu_back = True
-                else:
-                    print (' ' + str(hp) + ' hp left')
+                    mainMenu()
+
+                elif health <= 0:
+                    print(' You are dead you miserable looser')
+                    coins = 0
+
             else:
                 print(' you killed the monster, congrats')
                 menu_back = True
-            time.sleep(4)
+            time.sleep(6)
         elif menu_sel == 1:
-            print(' monsterhp: ' + str(hp)   )
+            moap = monsterattack()
+            health = health - int(moap)* 0.42
+
+            print(' The monster has ' + str(hp) + ' hp left'  )
             print(' you blocked')
-            print(' ' + str(hp) + ' left')
-            time.sleep(3)
+            print(' the monster attacked and dealt ' + str(moap) + ' damage' )
+            print(' you have ' + str(health) + ' hp left')
+            time.sleep(6)
         elif menu_sel == 2:
             print(' fly you fools!')
             time.sleep(3)
@@ -215,11 +384,48 @@ def Monster():
         elif menu_sel == 3 and debug == True:
             sys.exit()
 
+def monsterattack():
+    global motype
+
+    if motype == 1:
+        return (random.randint(2, 5))
+    elif motype == 2:
+        return (random.randint(4, 7))
+    elif motype == 3:
+        return (random.randint(6, 10))
+    elif motype == 4:
+        return (random.randint(8, 13))
+    else:
+        print('unknown monstertype what happened lol??')
+        sys.exit()
+
+def reward():
+    global motype
+
+    if motype == 1:
+        reward = (random.randint(10, 20))
+    elif motype == 2:
+        reward = (random.randint(21, 35))
+    elif motype == 3:
+        reward = (random.randint(36, 57))
+    elif motype == 4:
+        reward =  (random.randint(58, 83))
+    else:
+        print(' unknown monstertype what happened lol?')
+        sys.exit()
+
+    with open(str('RoomAdvGame/' + player + '.purse'), 'w') as inv:
+        coins_atm = inv.read()
+        coins2write = int(coins_atm + reward)
+        inv.write(coins2write)
+
+    return reward
+
 def Treasure():
     menu_title = ' You found a treasure!\n Yey'
     menu_items = ['open the chest', 'go further', 'back']
     menu_back = False
-
+    global palyer
     menu = TerminalMenu (
         title = menu_title,
         menu_entries = menu_items,
@@ -238,7 +444,7 @@ def Treasure():
             chance = random.randint(1, 100)
             if chance <= 50 and chance > 15:
                 print(' You found a Normal Sword')
-                with open(inventory, 'a') as inv:
+                with open('RoomAdvGame/' + player + '/' + inventory, 'a') as inv:
                     inv.write('1')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -246,7 +452,7 @@ def Treasure():
                 newRoom()
             elif chance > 50 and chance < 76:
                 print(' You found a Hardened Iron Sword')
-                with open(inventory, 'a') as inv:
+                with open('RoomAdvGame/' + player + '/' + inventory, 'a') as inv:
                     inv.write('2')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -254,7 +460,7 @@ def Treasure():
                 newRoom()
             elif chance >= 76 and chance <= 88:
                 print(' You found Ringil\n Congrats!')
-                with open(inventory, 'a') as inv:
+                with open('RoomAdvGame/' + player + '/' + inventory, 'a') as inv:
                     inv.write('3')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -262,7 +468,7 @@ def Treasure():
                 newRoom()
             elif chance > 88 and chance < 94:
                 print(' You found Excalibur!\n Congrats!')
-                with open(inventory, 'a') as inv:
+                with open('RoomAdvGame/' + player + '/' + inventory, 'a') as inv:
                     inv.write('4')
                 time.sleep(1.5)
                 print(rabbit_hole)
@@ -288,7 +494,7 @@ def Inventar():
     menu_title = ' Your inventory: ._.'
     menu_items = ['list the available ones', 'choose', 'back']
     menu_back = False
-
+    global player
     menu = TerminalMenu (
         title = menu_title,
         menu_entries = menu_items,
@@ -304,7 +510,7 @@ def Inventar():
         main_sel = menu.show()
 
         if main_sel == 0:
-            with open(inventory) as inv:
+            with open('RoomAdvGame/' + player + '/' + inventory) as inv:
                 inven = []
                 inven = inv.read()
             items = set()
@@ -357,7 +563,7 @@ def chooseWeapon():
     menu_title = ' Choose your weapon here'
     menu_items = ['Normal Sword', 'Hardened Iron Sword', 'Ringil', 'Excalibur', 'back']
     menu_back = False
-
+    global player
     menu = TerminalMenu (
         title = menu_title,
         menu_entries = menu_items,
@@ -372,7 +578,7 @@ def chooseWeapon():
         noot = 'you dont have this weapon'
         menu_sel = menu.show()
         if menu_sel == 0:
-            with open(inventory) as inv:
+            with open('RoomAdvGame/' + player + '/' + inventory) as inv:
                 inven = inv.read()
             if '1' in inven:
                 print('success')
@@ -384,7 +590,7 @@ def chooseWeapon():
                 time.sleep(1)
 
         elif menu_sel == 1:
-            with open(inventory) as inv:
+            with open('RoomAdvGame/' + player + '/' + inventory) as inv:
                 inven = inv.read()
             if '2' in inven:
                 weapon= 2
@@ -396,7 +602,7 @@ def chooseWeapon():
 
 
         elif menu_sel == 2:
-            with open(inventory) as inv:
+            with open('RoomAdvGame/' + player + '/' + inventory) as inv:
                 inven = inv.read()
             if '3' in inven:
                 weapon = 3
@@ -407,7 +613,7 @@ def chooseWeapon():
                 time.sleep(1)
 
         elif menu_sel == 3:
-            with open(inventory) as inv:
+            with open('RoomAdvGame/' + player + '/' + inventory) as inv:
                 inven = inv.read()
             if '4' in inven:
                 weapon = 4
@@ -437,67 +643,82 @@ def Teleport():
 
 def login():
     global player
-    if os.path.isfile('players'):
 
-        with open('players', 'r') as pl:
+    if os.path.isfile('RoomAdvGame/players'):
+        print('test') #implementing subdirs!!
+        with open('RoomAdvGame/players', 'r') as pl:
             players = []
             players = pl.readlines()
         print(' Type "new" for a new player')
         print(' Idiots: --> ' + str(players))
         username = input(' Username: ')
 
-        if str(username) == 'new':
-            print(' Creating one..')
-            new_username = input(' Username: ')
-            new_password = getpass(' Password: ')
-            new_hash = hashPasswd(new_password)
 
-            with open(new_username + '.password', 'wb') as new:
-                new.write(new_hash)
-
-            with open('players', 'a') as p:
-                p. writelines('\n' + new_username)
-                player = new_username
-
-        elif str(username) in players:
-            with open(username + '.password', 'rb') as user_password:
+                    #
+        if str(username + '\n') in players or str(username) in players:
+            with open('RoomAdvGame/' + username + '/' + username + '.password', 'rb') as user_password:
                 content = user_password.read()
                 salt = content[:32]
                 hashed_pwd = content
-
+            i = 1
+            print('break #1')
+            time.sleep(2)
+            while i < 4:
                 if str(hashed_pwd) == str(hashPasswd(getpass(' Password: '), salt)):
-                    print('access')
+                    print(' accessed')
                     player = username
+                    break
+                elif i >= 3:
+                    print(' too many wrong passwords entered.. \n exiting')
+                    sys.exit()
                 else:
-                    print('failed')
+                    print('\n failed\n wrong password entered\n')
+                    print(' ' + str(3 - i) + ' tries left')
+                    i += 1
 
-        else:
-            print(' This user does not exit...')
+
+        elif str(username) == 'new':
             print(' Creating one..')
             new_username = input(' Username: ')
             new_password = getpass(' Password: ')
             new_hash = hashPasswd(new_password)
 
-            with open(new_username + '.password', 'wb') as new:
+            os.mkdir('RoomAdvGame/' + new_username)
+
+            with open('RoomAdvGame/' + new_username + '/' + new_username + '.password', 'wb') as new:
                 new.write(new_hash)
 
-            with open('players', 'a') as p:
-                p. writelines('\n' + new_username)
-                player = new_username
+                with open('RoomAdvGame/players', 'a') as p:
+                    p. writelines('\n' + new_username)
+                    player = new_username
+
+        else:
+            print(' This user does not exit...')
+            newUser()
 
     else:
-        print(' File "players" not found')
-        print(' Creating one..')
-        new_username = input(' Username: ')
-        new_password = getpass(' Password: ')
-        new_hash = hashPasswd(new_password)
+        print(' First Startup?')
+        newUser()
 
-        with open(new_username + '.password', 'wb') as new:
-            new.write(new_hash)
+def newUser():
+    global player
 
-        with open('players', 'a') as p:
-            p. writelines('\n' + new_username)
-            player = new_username
+    print(' Creating new user..')
+    new_username = input(' Username: ')
+    new_password = getpass(' Password: ')
+    new_hash = hashPasswd(new_password)
+
+    if not os.path.exists('RoomAdvGame'):
+        os.mkdir('RoomAdvGame')
+
+    os.mkdir('RoomAdvGame/' + new_username)
+
+    with open('RoomAdvGame/' + new_username + '/' + new_username + '.password', 'wb') as new:
+        new.write(new_hash)
+
+    with open('RoomAdvGame/players', 'a') as p:
+        p.writelines('\n' + new_username)
+        player = new_username
 
 if __name__ == '__main__':
     main()
